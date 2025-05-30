@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Profile information
+  phoneNumber   String?
+  currentlyRenting Boolean @default(false)
+  monthlyBudget  Float?
+  moveInDate    DateTime?
+  
+  // Preferences
+  preferredLocations String[]
+  preferredAmenities String[]
+  
+  // Relations
+  feedback      Feedback[]
+  referrals     Referral[]
+  applications  Application[]
+  savedProperties Property[]  @relation("SavedProperties")
+}
+
+model Property {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  address     String
+  price       Float
+  bedrooms    Int
+  bathrooms   Int
+  amenities   String[]
+  images      String[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  feedback    Feedback[]
+  referrals   Referral[]
+  applications Application[]
+  savedBy     User[]     @relation("SavedProperties")
+}
+
+model Feedback {
+  id          String    @id @default(cuid())
+  rating      Int
+  comment     String
+  createdAt   DateTime  @default(now())
+  
+  // Relations
+  userId      String
+  propertyId  String
+  user        User      @relation(fields: [userId], references: [id])
+  property    Property  @relation(fields: [propertyId], references: [id])
+}
+
+model Referral {
+  id          String    @id @default(cuid())
+  referralCode String   @unique
+  status      String    // PENDING, ACCEPTED, REJECTED
+  createdAt   DateTime  @default(now())
+  
+  // Relations
+  userId      String
+  propertyId  String
+  user        User      @relation(fields: [userId], references: [id])
+  property    Property  @relation(fields: [propertyId], references: [id])
+}
+
+model Application {
+  id          String    @id @default(cuid())
+  status      String    // PENDING, APPROVED, REJECTED
+  moveInDate  DateTime
+  message     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  userId      String
+  propertyId  String
+  user        User      @relation(fields: [userId], references: [id])
+  property    Property  @relation(fields: [propertyId], references: [id])
+  
+  // Application details
+  employmentStatus String
+  monthlyIncome   Float
+  creditScore     Int?
+  references      Json?  // Store reference contact information
+} 
